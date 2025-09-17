@@ -378,31 +378,52 @@
             formData.append('project', document.getElementById('project').value);
             formData.append('file', fileInput.files[0]);
             
-            // Show processing status
+            // Hide form and show confirmation
+            document.getElementById('auditForm').style.display = 'none';
+            
+            // Show upload confirmation with filename
             const status = document.getElementById('status');
-            status.className = 'status processing';
+            status.className = 'status success';
             status.style.display = 'block';
-            status.innerHTML = '<div class="loading"></div>Bestand wordt geanalyseerd...';
+            status.innerHTML = `
+                <div style="text-align: center;">
+                    <h3 style="color: #d1fae5; margin-bottom: 16px; font-size: 1.2rem;">Bestand Ontvangen</h3>
+                    <div style="background: rgba(209, 250, 229, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                        <strong>${fileInput.files[0].name}</strong><br>
+                        <small style="opacity: 0.8;">${formatFileSize(fileInput.files[0].size)}</small>
+                    </div>
+                    <p style="line-height: 1.6; margin-bottom: 12px;">
+                        De analyse wordt gestart. Je ontvangt het gedetailleerde rapport binnen 2 minuten per email.
+                    </p>
+                    <p style="font-size: 0.9rem; opacity: 0.8;">
+                        Je kunt deze pagina nu sluiten.
+                    </p>
+                </div>
+            `;
             
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<div class="loading"></div>Verwerken...';
-            
-            // Submit to Apps Script - REPLACE WITH YOUR WEBAPP URL
+            // Submit to Apps Script in background
             fetch('https://script.google.com/macros/s/AKfycbyhz_6IZz28IObGb_f2Ab5s7mJxaoNY-GjxCXmZTxvEf-LQvnGQ0lbOUd0pB83q7AI/exec', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.text())
-            .then(result => {
-                status.className = 'status success';
-                status.innerHTML = 'Upload succesvol! Je ontvangt het rapport binnen 2 minuten per email.';
-                submitBtn.innerHTML = 'Analyse Voltooid';
-            })
             .catch(error => {
+                // If submission fails, show error but keep the UI clean
                 status.className = 'status error';
-                status.innerHTML = 'Er ging iets mis. Probeer het opnieuw.';
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Start Analyse';
+                status.innerHTML = `
+                    <div style="text-align: center;">
+                        <h3 style="color: #fee2e2; margin-bottom: 16px;">Er ging iets mis</h3>
+                        <p style="margin-bottom: 16px;">Het bestand kon niet worden verwerkt. Probeer het opnieuw.</p>
+                        <button onclick="location.reload()" style="
+                            background: #dc2626; 
+                            color: white; 
+                            border: none; 
+                            padding: 12px 24px; 
+                            border-radius: 8px; 
+                            cursor: pointer;
+                            font-weight: 600;
+                        ">Opnieuw Proberen</button>
+                    </div>
+                `;
             });
         });
         
